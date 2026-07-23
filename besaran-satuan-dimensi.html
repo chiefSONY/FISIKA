@@ -899,7 +899,7 @@
         }
 
         // ================================================================
-        // ===== CEK DIMENSI BESARAN SEMBARANG (FIX) =====
+        // ===== CEK DIMENSI BESARAN SEMBARANG (FIX FINAL) =====
         // ================================================================
         function cekDimensiSembarang() {
             const persamaan = document.getElementById('persamaanInput').value.trim();
@@ -993,7 +993,30 @@
             }
 
             // ===== 4. Split menjadi suku =====
-            const terms = rightSide.split(/(?=[+-])/).filter(t => t.trim() !== '');
+            // Ganti tanda + dan - dengan delimiter
+            let terms = [];
+            let currentTerm = '';
+            let sign = '+';
+            
+            for (let i = 0; i < rightSide.length; i++) {
+                const ch = rightSide[i];
+                if (ch === '+' || ch === '-') {
+                    if (currentTerm !== '') {
+                        terms.push(sign + currentTerm);
+                        currentTerm = '';
+                    }
+                    sign = ch;
+                } else {
+                    currentTerm += ch;
+                }
+            }
+            if (currentTerm !== '') {
+                terms.push(sign + currentTerm);
+            }
+
+            // Bersihkan terms
+            terms = terms.map(t => t.trim()).filter(t => t !== '' && t !== '+' && t !== '-');
+
             let hasil = {};
 
             for (const konst of konstanta) {
@@ -1036,8 +1059,8 @@
                         pangkat = 0.5;
                     }
 
-                    // Cek pembagian
-                    if (foundTerm.includes('/') && !foundTerm.includes('√')) {
+                    // Cek pembagian - cek apakah ada tanda /
+                    if (foundTerm.includes('/')) {
                         isDiv = true;
                         // Jika ada pangkat di penyebut
                         const negMatch = foundTerm.match(/\/\s*([a-z])\s*\^?\s*\(?\s*([\d\/]+)\s*\)?/);

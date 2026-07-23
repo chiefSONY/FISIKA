@@ -913,7 +913,7 @@
         }
 
         // ================================================================
-        // ===== CEK DIMENSI BESARAN SEMBARANG (Versi Sederhana) =====
+        // ===== CEK DIMENSI BESARAN SEMBARANG (Versi Fix) =====
         // ================================================================
         function cekDimensiSembarang() {
             const persamaan = document.getElementById('persamaanInput').value.trim();
@@ -933,7 +933,7 @@
                 return;
             }
 
-            // Dimensi variabel
+            // DIMENSI VARIABEL DASAR
             const dimVar = {
                 'v': '[L][T]⁻¹',
                 's': '[L]',
@@ -965,9 +965,18 @@
             }
 
             const leftDim = dimVar[leftVar];
-            let langkah = `Dimensi ${leftVar} = ${leftDim}\n\n`;
+            let langkah = `Dimensi ${leftVar} = ${leftDim}\n`;
+            langkah += `Persamaan: ${leftVar} = ${rightSide}\n\n`;
 
-            // Cari semua konstanta (A, B, C, k)
+            // ===== 1. Cari semua variabel di sisi kanan =====
+            const varFound = [];
+            for (const v of ['v', 's', 't', 'a']) {
+                if (rightSide.includes(v)) {
+                    varFound.push(v);
+                }
+            }
+
+            // ===== 2. Cari semua konstanta (A, B, C, k) =====
             const konstanta = [];
             const matches = rightSide.match(/[A-Z]/g);
             if (matches) {
@@ -978,14 +987,26 @@
                 }
             }
 
+            // ===== 3. Tampilkan dimensi variabel yang ditemukan =====
+            if (varFound.length > 0) {
+                langkah += `📌 Dimensi variabel yang terdeteksi:\n`;
+                for (const v of varFound) {
+                    langkah += `   ${v} = ${dimVar[v]}\n`;
+                }
+                langkah += `\n`;
+            }
+
             if (konstanta.length === 0) {
-                hasilValue.textContent = '[ ? ]';
-                hasilDetail.textContent = 'Tidak ada konstanta (A, B, C, k) dalam persamaan';
-                hasilValue.style.color = '#ffaa00';
+                langkah += `⚠️ Tidak ada konstanta (A, B, C, k) dalam persamaan.\n`;
+                langkah += `\n✅ Dimensi variabel sudah diketahui seperti di atas.`;
+                hasilValue.textContent = varFound.map(v => `${v} = ${dimVar[v]}`).join(', ');
+                hasilDetail.textContent = 'Dimensi variabel dalam persamaan';
+                hasilStep.textContent = langkah;
+                hasilStep.classList.add('show');
                 return;
             }
 
-            // Split menjadi suku
+            // ===== 4. Split menjadi suku =====
             const terms = rightSide.split(/(?=[+-])/).filter(t => t.trim() !== '');
             let hasil = {};
 
@@ -1032,6 +1053,17 @@
                     // Cek pembagian
                     if (foundTerm.includes('/') && !foundTerm.includes('√')) {
                         isDiv = true;
+                        // Jika ada pangkat di penyebut
+                        const negMatch = foundTerm.match(/\/\s*([a-z])\s*\^?\s*\(?\s*([\d\/]+)\s*\)?/);
+                        if (negMatch && negMatch[2]) {
+                            const p = negMatch[2];
+                            if (p.includes('/')) {
+                                const ps = p.split('/');
+                                pangkat = parseFloat(ps[0]) / parseFloat(ps[1]);
+                            } else {
+                                pangkat = parseFloat(p) || 1;
+                            }
+                        }
                     }
 
                 } else {
@@ -1078,7 +1110,7 @@
                 hasil[konst] = dimKonst;
             }
 
-            // Format hasil
+            // ===== 5. Format hasil =====
             let dimensiStr = '';
             let deskripsi = '';
 
@@ -1104,7 +1136,7 @@
             }
 
             langkah += `\n${'='.repeat(40)}\n`;
-            langkah += `✓ Jawaban: ${dimensiStr}`;
+            langkah += `✅ JAWABAN: ${dimensiStr}`;
 
             // Tampilkan hasil
             hasilValue.textContent = dimensiStr;

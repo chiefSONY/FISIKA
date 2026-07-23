@@ -376,15 +376,6 @@
             display: block;
         }
 
-        .result-box .result-step .highlight-step {
-            color: #00ff88;
-            font-weight: 600;
-        }
-
-        .result-box .result-step .dim-step {
-            color: #7fd4ff;
-        }
-
         .example-box {
             background: rgba(0, 200, 255, 0.02);
             border-radius: 1rem;
@@ -401,10 +392,6 @@
             padding: 0.1rem 0.4rem;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
-        }
-
-        .example-box .highlight {
-            color: #00ff88;
         }
 
         .dimensi-variabel {
@@ -767,7 +754,7 @@
 
             <div style="font-size:0.9rem; color:#6a9ab0; margin-bottom:1rem;">
                 <i class="fas fa-info-circle" style="color:#4db8ff;"></i>
-                Masukkan persamaan dengan konstanta A, B, C, atau k. Sistem akan menentukan dimensinya.
+                Masukkan persamaan untuk menentukan dimensi konstanta.
             </div>
 
             <!-- Dimensi Variabel Dasar -->
@@ -827,8 +814,7 @@
                         <strong>Contoh persamaan:</strong><br>
                         • <code>v = A·t + B</code> → v = kecepatan, t = waktu<br>
                         • <code>s = A·t² + B·t + C</code> → s = jarak, t = waktu<br>
-                        • <code>v = A·√t + B/t</code> → v = kecepatan, t = waktu<br>
-                        • <code>a = A·t + B</code> → a = percepatan, t = waktu
+                        • <code>v = A·√t + B/t</code> → v = kecepatan, t = waktu
                     </div>
                 </div>
             </div>
@@ -913,7 +899,7 @@
         }
 
         // ================================================================
-        // ===== CEK DIMENSI BESARAN SEMBARANG (Versi Fix) =====
+        // ===== CEK DIMENSI BESARAN SEMBARANG (FIX) =====
         // ================================================================
         function cekDimensiSembarang() {
             const persamaan = document.getElementById('persamaanInput').value.trim();
@@ -976,7 +962,16 @@
                 }
             }
 
-            // ===== 2. Cari semua konstanta (A, B, C, k) =====
+            // ===== 2. Tampilkan dimensi variabel yang ditemukan =====
+            if (varFound.length > 0) {
+                langkah += `📌 Dimensi variabel yang terdeteksi:\n`;
+                for (const v of varFound) {
+                    langkah += `   ${v} = ${dimVar[v]}\n`;
+                }
+                langkah += `\n`;
+            }
+
+            // ===== 3. Cari semua konstanta (A, B, C, k) =====
             const konstanta = [];
             const matches = rightSide.match(/[A-Z]/g);
             if (matches) {
@@ -985,15 +980,6 @@
                         konstanta.push(m);
                     }
                 }
-            }
-
-            // ===== 3. Tampilkan dimensi variabel yang ditemukan =====
-            if (varFound.length > 0) {
-                langkah += `📌 Dimensi variabel yang terdeteksi:\n`;
-                for (const v of varFound) {
-                    langkah += `   ${v} = ${dimVar[v]}\n`;
-                }
-                langkah += `\n`;
             }
 
             if (konstanta.length === 0) {
@@ -1098,10 +1084,12 @@
                     // konstanta / variabel = leftVar → konstanta = leftVar × variabel
                     dimKonst = `${leftDim} × ${dimVarStr}`;
                     langkah += `${konst} / ${varName}${pangkat !== 1 ? '^' + pangkat : ''} = ${leftDim}\n`;
+                    langkah += `${konst} = ${leftDim} × ${dimVarStr}\n`;
                 } else {
                     // konstanta × variabel = leftVar → konstanta = leftVar / variabel
                     dimKonst = `${leftDim} / ${dimVarStr}`;
                     langkah += `${konst} × ${varName}${pangkat !== 1 ? '^' + pangkat : ''} = ${leftDim}\n`;
+                    langkah += `${konst} = ${leftDim} / ${dimVarStr}\n`;
                 }
 
                 // Sederhanakan
